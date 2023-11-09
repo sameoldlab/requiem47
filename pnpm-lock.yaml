@@ -10,6 +10,9 @@ dependencies:
     version: 0.147.0
 
 devDependencies:
+  '@types/three':
+    specifier: 0.147.0
+    version: 0.147.0
   vite:
     specifier: ^4.4.5
     version: 4.5.0
@@ -213,6 +216,16 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /@types/three@0.147.0:
+    resolution: {integrity: sha512-IW1P10dhUym3B6wamVqohCYS/BqzT4XYNhRCI8NLfm6mXPrgfm70G6d2E15OdbBmXNdd5yewYWtL/+aClljNvA==}
+    dependencies:
+      '@types/webxr': 0.5.8
+    dev: true
+
+  /@types/webxr@0.5.8:
+    resolution: {integrity: sha512-9vRpV4nMzuZIdJiu/nHUk1AQV0cguaBI32DIauJXBxpvG3wiXk3VD+kQKx111V7I/YvAoGyJZTyhaWODYEbZ0w==}
+    dev: true
 
   /esbuild@0.18.20:
     resolution: {integrity: sha512-ceqxoedUrcayh7Y7ZX6NdbbDzGROiyVBgC4PriJThBKSVPWnnFHZAkfI1lJT8QFkOwH4qOS2SJkS4wvpGl8BpA==}
