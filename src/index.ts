@@ -37,10 +37,13 @@ if (canvas) {
   //   SCENE
   //////////////////////////////////////////////////////////////
 
+  const BOID_COUNT = 300
+  const PARTICLE_SIZE = 11
+  const ZOOM = 900
+
   const box = new T.Box3()
   const bounding = new T.BoxGeometry(600, 300, 300)
   bounding.computeBoundingBox()
-
   const boundingWire = new T.Box3Helper(bounding.boundingBox)
   scene.add(boundingWire)
 
@@ -51,25 +54,24 @@ if (canvas) {
     update: () => T.Vector3
     flock: (arg0: Boid[]) => void
   }
-  const BOID_COUNT = 200
-  const PARTICLE_SIZE = 6
 
   ////////////////
   //   BOID
   ////////////////
   function boid(): Boid {
-    const position = new vec3().random().subScalar(0.5).multiplyScalar(10000)
-    const velocity = new vec3().random().multiplyScalar(500)
+    const position = new vec3().random().subScalar(0.5).multiplyScalar(500)
+    const velocity = new vec3().random().subScalar(0.5) //.multiplyScalar(3)
     const acceleration = new vec3()
-    const maxSpeed = 12
+    const maxSpeed = 8
 
     const flock = (boids: Boid[]) => {
-      console.log(acceleration)
-      // Pass
-      acceleration.add(separate(boids)).add(align(boids)).add(cohere(boids))
-      // normalize acceleration. Seems ok without it (both or none) Forms spheres instead of cubes
-      .normalize()
-      .multiplyScalar(maxSpeed)
+      acceleration
+        .add(cohere(boids))
+        .add(align(boids))
+        .add(separate(boids))
+        // normalize acceleration. Seems ok without it (both or none) Forms spheres instead of cubes
+        .normalize()
+        .multiplyScalar(maxSpeed)
     }
 
     const update = () => {
@@ -78,19 +80,41 @@ if (canvas) {
       acceleration.multiplyScalar(0)
 
       // Quick Passthorugh
-      if (Math.abs(position.x) >= 150) position.x = position.x % 150
-      if (Math.abs(position.y) >= 100) position.y = position.y % 100
-      if (Math.abs(position.z) >= 100) position.z = -position.z % 100
+/*       if (Math.abs(position.x) >= 200) {
+        velocity.x = -velocity.x
+        position.add(velocity)
+      } else if (Math.abs(position.x) <= -200) {
+        velocity.x = -velocity.x
+        position.add(velocity)
+      }
+      if (Math.abs(position.y) >= 200) {
+        velocity.y = -velocity.y
+        position.add(velocity)
+      } else if (Math.abs(position.y) <= -200) {
+        velocity.y = -velocity.y
+        position.add(velocity)
+      }
+      if (Math.abs(position.z) >= 200) {
+        velocity.z = -velocity.z
+        position.add(velocity)
+      } else if (Math.abs(position.z) <= -200) {
+        velocity.z = -velocity.z
+        position.add(velocity)
+      } */
+        if (Math.abs(position.x) >=  200) position.x = -(position.x % 400)
+        if (Math.abs(position.y) >=  100) position.y = -(position.y % 200)
+        if (Math.abs(position.z) >=  100) position.z = -(position.z % 200)
 
       return position
     }
+
     const neighbors = (boids: Boid[], rule) => {
-      const radius = 40
+      const radius = 14
       let total = 0
       let steer = new vec3()
       for (let other of boids) {
         if (
-          //   position !== other.position &&
+          position !== other.position &&
           position.distanceTo(other.position) < radius
         ) {
           if (position === other.position) {
@@ -105,38 +129,42 @@ if (canvas) {
 
     // Separation
     const separate = (boids: Boid[]) => {
-      const { total, vec } = neighbors(boids, (other, vec) => {
-        vec.add(other.velocity)
-      })
+      const { total, vec } = neighbors(boids, (other, vect) => {
+        const weightedVelocity = new vec3()
+          .subVectors(position, other.position)
+          // .normalize()
+          .divideScalar(position.distanceTo(other.position))
+        // .add()
 
+        vect.add(weightedVelocity)
+      })
+      if (total) {
+        vec.divideScalar(total).multiplyScalar(10)
+      }
       return new vec3()
     }
 
     // Alignment
     const align = (boids: Boid[]) => {
-      const { total, vec } = neighbors(boids, (other, v) => {
-        v.add(other.velocity)
+      const { total, vec } = neighbors(boids, (other, vect) => {
+        vect.add(other.velocity)
       })
 
       if (total) {
         vec.divideScalar(total).sub(velocity)
-        .clampScalar(-maxSpeed, maxSpeed)
+        //    .clampScalar(-maxSpeed, maxSpeed)
       }
       return vec
     }
 
     // Cohesion
     const cohere = (boids: Boid[]) => {
-      const { total, vec } = neighbors(boids, (other, v) => {
-        v.add(other.position)
+      const { total, vec } = neighbors(boids, (other, vect) => {
+        vect.add(other.position)
       })
 
       if (total) {
-        vec
-          .divideScalar(total)
-          .sub(position)
-          .sub(velocity)
-          .clampScalar(-maxSpeed, maxSpeed)
+        vec.divideScalar(total).sub(position).sub(velocity).clampScalar(-2, 3)
       }
       return vec
     }
@@ -144,7 +172,7 @@ if (canvas) {
     return {
       position,
       velocity,
-        //   acceleration,
+      acceleration,
       update,
       flock,
     }
@@ -173,6 +201,7 @@ if (canvas) {
         b.position.toArray()
     })
 
+    geometry.setAttribute('position', new T.BufferAttribute(posArray, 3))
     const mesh = new T.Points(geometry, material)
 
     // Runs every frame
@@ -185,14 +214,13 @@ if (canvas) {
         ;[posArray[i * 3], posArray[i * 3 + 1], posArray[i * 3 + 2]] =
           b.position.toArray()
       })
-
       geometry.setAttribute('position', new T.BufferAttribute(posArray, 3))
 
       const elapsedTime = clock.getElapsedTime()
       if (mouse.x > 0) {
         const dampTime = elapsedTime * 0.01
-        mesh.rotation.x = -mouse.y * dampTime
-        mesh.rotation.y = -mouse.x * dampTime
+        // mesh.rotation.x = -mouse.y * dampTime
+        // mesh.rotation.y = -mouse.x * dampTime
       } else {
         // mesh.rotation.y = 0.5 * elapsedTime
       }
@@ -215,7 +243,7 @@ if (canvas) {
     0.01,
     4000
   )
-  camera.position.z = 300
+  camera.position.z = ZOOM
   scene.add(camera)
 
   //////////////////////////////////////////////////////////////////////////////
@@ -225,6 +253,10 @@ if (canvas) {
   const clock = new T.Clock()
   const animate = () => {
     particles.update()
+    const elapsedTime = clock.getElapsedTime()
+
+    // camera.rotation.y = 0.5 * elapsedTime
+
     // box.copy(bounding.boundingBox).applyMatrix4(bounding.matrixWorld)
 
     // Render

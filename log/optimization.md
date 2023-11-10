@@ -26,3 +26,27 @@ P.S. Please remember to move this to an independent function. Absol utely do not
 
 Spatial hash tables looking *Unreasonably Effective*
 > Rebuilding a tre per frare is at best O(NlonN) for N object whearas rebuilding a has table is O(N)
+
+
+      // Quick Passthorugh
+      if      (Math.abs(position.x) >=  300) {
+        velocity.x = -velocity.x
+        position.add(velocity)
+    } else if (Math.abs(position.x) <= -300) {
+        velocity.x = -velocity.x
+        position.add(velocity)
+    }
+      if      (Math.abs(position.y) >=  200) {
+        velocity.y = -velocity.y
+        position.add(velocity)
+    } else if (Math.abs(position.y) <= -200) {
+        velocity.y = -velocity.y
+        position.add(velocity)
+    }
+      if      (Math.abs(position.z) >=  200) {
+        velocity.z = -velocity.z
+        position.add(velocity)
+    } else if (Math.abs(position.z) <= -200) {
+        velocity.z = -velocity.z
+        position.add(velocity)
+    }
