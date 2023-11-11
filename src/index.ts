@@ -36,16 +36,29 @@ if (canvas) {
   //////////////////////////////////////////////////////////////
   //   SCENE
   //////////////////////////////////////////////////////////////
+  /**
+   * @param particleSize: Number of Boids in scene.
+   * Do not increase beyond 400
+   * */
+  const boidParams = {
+    count:1000,
+    particleSize: 12/3,
+    speed: 8,
+    radius: 100,
+    
+    separateRadius: 10,
+    separateStrength: 5,
 
-  const BOID_COUNT = 300
-  const PARTICLE_SIZE = 11
-  const ZOOM = 900
+    alignRadius: 80,
+    alignStrength: 16,
 
-  const box = new T.Box3()
-  const bounding = new T.BoxGeometry(600, 300, 300)
-  bounding.computeBoundingBox()
-  const boundingWire = new T.Box3Helper(bounding.boundingBox)
-  scene.add(boundingWire)
+    cohereRadius: 70,
+    cohereStrength: 4,
+    
+
+  }
+  const ZOOM = 800
+  const BOUNDS = new vec3(500, 500, 500)
 
   type Boid = {
     position: T.Vector3
@@ -54,187 +67,140 @@ if (canvas) {
     update: () => T.Vector3
     flock: (arg0: Boid[]) => void
   }
-
+  
   ////////////////
   //   BOID
   ////////////////
   function boid(): Boid {
     const position = new vec3().random().subScalar(0.5).multiplyScalar(500)
-    const velocity = new vec3().random().subScalar(0.5) //.multiplyScalar(3)
+    const velocity = new vec3().random().subScalar(.5)//.multiplyScalar(3)
     const acceleration = new vec3()
-    const maxSpeed = 8
 
     const flock = (boids: Boid[]) => {
+        let totalS = 0
+        let totalA = 0
+        let totalC = 0
+        let separate = new vec3()
+        let align = new vec3()
+        let cohere = new vec3()
+        for (let other of boids) {
+          if (position !== other.position) {
+           const distance = position.distanceTo(other.position)
+
+            if(distance < boidParams.separateRadius) {
+                totalS++
+                const weightedVelocity = new vec3().subVectors  (position, other.position)
+                                                   .divideScalar(distance)
+                                                // .normalize()
+                separate.add(weightedVelocity)
+            }
+            if(distance < boidParams.alignRadius) {
+                totalA++
+                align.add(other.velocity) //A
+            }
+            if(distance < boidParams.cohereRadius) {
+                totalC++
+                cohere.add(other.position) //C
+            }
+        } 
+        }
+        if(totalS) separate .divideScalar(totalS)
+                            .sub(velocity)
+                            .multiplyScalar(boidParams.separateStrength)
+
+        if(totalA) align    .divideScalar(totalA)
+                            .sub(velocity)
+                            .clampScalar(-boidParams.speed, boidParams.speed)
+                            .multiplyScalar(boidParams.alignStrength)
+
+        if(totalC) cohere   .divideScalar(totalC)
+                            .sub(position).sub(velocity)
+                            .clampScalar(-2, 3)
+                            .multiplyScalar(boidParams.cohereStrength)
+        
+        
       acceleration
-        .add(cohere(boids))
-        .add(align(boids))
-        .add(separate(boids))
+        .add(separate)
+        .add(align)
+        .add(cohere)
         // normalize acceleration. Seems ok without it (both or none) Forms spheres instead of cubes
         .normalize()
-        .multiplyScalar(maxSpeed)
-    }
-
-    const update = () => {
-      position.add(velocity)
-      velocity.add(acceleration).clampScalar(-maxSpeed, maxSpeed)
-      acceleration.multiplyScalar(0)
-
-      // Quick Passthorugh
-/*       if (Math.abs(position.x) >= 200) {
-        velocity.x = -velocity.x
-        position.add(velocity)
-      } else if (Math.abs(position.x) <= -200) {
-        velocity.x = -velocity.x
-        position.add(velocity)
-      }
-      if (Math.abs(position.y) >= 200) {
-        velocity.y = -velocity.y
-        position.add(velocity)
-      } else if (Math.abs(position.y) <= -200) {
-        velocity.y = -velocity.y
-        position.add(velocity)
-      }
-      if (Math.abs(position.z) >= 200) {
-        velocity.z = -velocity.z
-        position.add(velocity)
-      } else if (Math.abs(position.z) <= -200) {
-        velocity.z = -velocity.z
-        position.add(velocity)
-      } */
-        if (Math.abs(position.x) >=  200) position.x = -(position.x % 400)
-        if (Math.abs(position.y) >=  100) position.y = -(position.y % 200)
-        if (Math.abs(position.z) >=  100) position.z = -(position.z % 200)
-
-      return position
-    }
-
-    const neighbors = (boids: Boid[], rule) => {
-      const radius = 14
-      let total = 0
-      let steer = new vec3()
-      for (let other of boids) {
-        if (
-          position !== other.position &&
-          position.distanceTo(other.position) < radius
-        ) {
-          if (position === other.position) {
-          }
-          rule(other, steer)
-          total++
-        }
-      }
-
-      return { total, vec: steer }
-    }
-
-    // Separation
-    const separate = (boids: Boid[]) => {
-      const { total, vec } = neighbors(boids, (other, vect) => {
-        const weightedVelocity = new vec3()
-          .subVectors(position, other.position)
-          // .normalize()
-          .divideScalar(position.distanceTo(other.position))
-        // .add()
-
-        vect.add(weightedVelocity)
-      })
-      if (total) {
-        vec.divideScalar(total).multiplyScalar(10)
-      }
-      return new vec3()
-    }
-
-    // Alignment
-    const align = (boids: Boid[]) => {
-      const { total, vec } = neighbors(boids, (other, vect) => {
-        vect.add(other.velocity)
-      })
-
-      if (total) {
-        vec.divideScalar(total).sub(velocity)
-        //    .clampScalar(-maxSpeed, maxSpeed)
-      }
-      return vec
-    }
-
-    // Cohesion
-    const cohere = (boids: Boid[]) => {
-      const { total, vec } = neighbors(boids, (other, vect) => {
-        vect.add(other.position)
-      })
-
-      if (total) {
-        vec.divideScalar(total).sub(position).sub(velocity).clampScalar(-2, 3)
-      }
-      return vec
+        .multiplyScalar(boidParams.speed)
     }
 
     return {
       position,
       velocity,
       acceleration,
-      update,
       flock,
+      update: () => {
+        position.add(velocity)
+        velocity.add(acceleration).clampScalar(-boidParams.speed, boidParams.speed)
+        acceleration.multiplyScalar(0)
+  
+        // Quick Passthorugh
+        if (Math.abs(position.x) >= BOUNDS.x/2) position.x = -(position.x % BOUNDS.x)
+        if (Math.abs(position.y) >= BOUNDS.y/2) position.y = -(position.y % BOUNDS.y)
+        if (Math.abs(position.z) >= BOUNDS.z/2) position.z = -(position.z % BOUNDS.z)
+  
+        return position
+      }
     }
   }
 
   ////////////////
   //   FLOCK
   ////////////////
-  /**
-   * Number of Boids in scene.
-   * Do not increase beyone 400
-   * */
   const flock = [] as Boid[]
-  for (let i = 0; i < BOID_COUNT; i++) {
+  for (let i = 0; i < boidParams.count; i++) {
     flock.push(boid()) // Do not "optimize"
   }
 
   function mesh() {
     const geometry = new T.BufferGeometry()
-    const material = new T.PointsMaterial({ size: PARTICLE_SIZE })
+    const material = new T.PointsMaterial({ size: boidParams.particleSize })
 
     // Runs once when added to scene
-    const posArray = new Float32Array(BOID_COUNT * 3)
+    const posArray = new Float32Array(boidParams.count * 3)
     flock.forEach((b, i) => {
       ;[posArray[i * 3], posArray[i * 3 + 1], posArray[i * 3 + 2]] =
         b.position.toArray()
     })
+    // geometry.setAttribute('position', new T.BufferAttribute(posArray, 3))
 
-    geometry.setAttribute('position', new T.BufferAttribute(posArray, 3))
-    const mesh = new T.Points(geometry, material)
-
-    // Runs every frame
-    function update() {
-      //   console.log(flock[32])
-      const posArray = new Float32Array(BOID_COUNT * 3)
-      flock.forEach((b, i) => {
-        b.flock(flock)
-        b.update()
-        ;[posArray[i * 3], posArray[i * 3 + 1], posArray[i * 3 + 2]] =
-          b.position.toArray()
-      })
-      geometry.setAttribute('position', new T.BufferAttribute(posArray, 3))
-
-      const elapsedTime = clock.getElapsedTime()
-      if (mouse.x > 0) {
-        const dampTime = elapsedTime * 0.01
-        // mesh.rotation.x = -mouse.y * dampTime
-        // mesh.rotation.y = -mouse.x * dampTime
-      } else {
-        // mesh.rotation.y = 0.5 * elapsedTime
-      }
-    }
     return {
-      mesh,
-      update,
+      mesh: new T.Points(geometry, material),
+      update: () => {
+        const posArray = new Float32Array(boidParams.count * 3)
+
+        flock.forEach((b) => {b.flock(flock)})       
+        flock.forEach((b, i) => {
+          b.update()
+          ;[posArray[i * 3], posArray[i * 3 + 1], posArray[i * 3 + 2]] =
+            b.position.toArray()
+        })
+        geometry.setAttribute('position', new T.BufferAttribute(posArray, 3))
+
+        const elapsedTime = clock.getElapsedTime()
+        if (mouse.x > 0) {
+          const dampTime = elapsedTime * 0.01
+          // mesh.rotation.x = -mouse.y * dampTime
+          // mesh.rotation.y = -mouse.x * dampTime
+        } else {
+          // mesh.rotation.y = 0.5 * elapsedTime
+        }
+      },
     }
   }
 
   const particles = mesh()
   scene.add(particles.mesh) // Might not need to draw these at all by the end... possibly
 
-  // Edge Detection
+  const box = new T.Box3()
+  const bounding = new T.BoxGeometry(BOUNDS.x, BOUNDS.y, BOUNDS.z)
+  bounding.computeBoundingBox()
+  const boundingWire = new T.Box3Helper(bounding.boundingBox)
+  scene.add(boundingWire)
 
   // Camera
   const camera = new T.PerspectiveCamera(
