@@ -9,7 +9,10 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@tweakpane/core": "^2.0.1",
     "@types/three": "0.147.0",
+    "lil-gui": "^0.19.1",
+    "tweakpane": "^4.0.1",
     "vite": "^4.4.5"
   },
   "dependencies": {
