@@ -88,7 +88,7 @@ import { boid, boidParams } from './boids'
   const particles = mesh()
   scene.add(particles.mesh) // Might not need to draw these at all by the end... possibly
 
-  const cam = { x: 0, y: 0, z: 4010 }
+  const cam = { x: 0, y: 0, z: 400 }
 
   const pane = new Pane()
   pane.addBinding(boidParams, 'count', { min: 1, max: 1000, step: 1 })
