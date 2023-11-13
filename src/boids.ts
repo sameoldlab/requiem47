@@ -1,8 +1,9 @@
 import {vec3, type Boid} from './utils'
 
 export const boidParams = {
-  count: 1000, //10-13ms / frame
+  count: 8000, //this can handle significantly more points but chokes in the initial frames where everything is bunched up together. Having too many boids in a small area will also affect sepparation 
   particleSize: 3,
+	BOUNDS: new vec3(500, 150, 500),
   speed: 2, //Oddly very high numbers seem to work fine
 
   //Consider two level of separate scale; boid to bot  + group to group
@@ -19,11 +20,10 @@ export const boidParams = {
     strength: 0,
   },
 }
-const BOUNDS = new vec3(500, 150, 500)
 
 // TODO: change to generic name and type
 const boid = (
-  position = new vec3().random().subScalar(0.5).multiplyScalar(200),
+  position = new vec3().random().subScalar(0.5).multiply(boidParams.BOUNDS.multiplyScalar(1.0001)),
   velocity = new vec3().random().subScalar(0.5).multiplyScalar(99)
 ): Boid => ({
   position,
@@ -98,9 +98,10 @@ function bounding(position) {
   const vect = new vec3()
   const { x, y, z } = position
   const { abs, sign } = Math
-  if (abs(x) > BOUNDS.x) vect.setX(sign(x) * -15)
-  if (abs(y) > BOUNDS.y) vect.setY(sign(y) * -15)
-  if (abs(z) > BOUNDS.z) vect.setZ(sign(z) * -15)
+	const {BOUNDS} = boidParams
+  if (abs(x) > BOUNDS.x) vect.setX(sign(x) * -.05)
+  if (abs(y) > BOUNDS.y) vect.setY(sign(y) * -.05)
+  if (abs(z) > BOUNDS.z) vect.setZ(sign(z) * -.05)
   return vect
 }
 

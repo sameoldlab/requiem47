@@ -4,6 +4,7 @@ import { Pane } from 'tweakpane'
 import Stats from 'stats.js'
 import { scene, type Boid } from './utils'
 import { boid, boidParams, flock } from './boids'
+import { findNearby, registerObject } from './spatialHash'
 
 const frame = {
   width: window.innerWidth,
@@ -39,22 +40,23 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 //////////////////////////////////////////////////////////////
 
 const boids = [] as Boid[]
+const grid = new Map()
 for (let i = 0; i < boidParams.count; i++) {
   boids[i] = boid()
+  registerObject(boids[i], grid)
 }
-
-  function mesh() {
+function mesh() {
     const geometry = new T.BufferGeometry()
     const material = new T.PointsMaterial({
-      size: boidParams.particleSize,
-      fog: true,
-      sizeAttenuation: true,
+        size: boidParams.particleSize,
+        fog: true,
+        sizeAttenuation: true,
     })
-
+    
     // Runs once when added to scene
     const posArray = new Float32Array(boidParams.count * 3)
     boids.forEach((b, i) => {
-      ;[posArray[i * 3], posArray[i * 3 + 1], posArray[i * 3 + 2]] =
+        ;[posArray[i * 3], posArray[i * 3 + 1], posArray[i * 3 + 2]] =
         b.position.toArray()
     })
     // geometry.setAttribute('position', new T.BufferAttribute(posArray, 3))
@@ -64,12 +66,21 @@ for (let i = 0; i < boidParams.count; i++) {
       update: () => {
         const posArray = new Float32Array(boidParams.count * 3)
 
+
         boids.forEach((b, i) => {
-          flock(b, boids)
-        // });         boids.forEach((b, i) => {
+          registerObject(boids[i], grid)
+
+          const fleet = findNearby(boids[i].position,grid)
+          if (!fleet) return
+
+          flock(b, [...fleet.values()])
           ;[posArray[i * 3], posArray[i * 3 + 1], posArray[i * 3 + 2]] =
             b.position.toArray()
+
         })
+        grid.clear()
+
+
         geometry.setAttribute('position', new T.BufferAttribute(posArray, 3))
 
         const elapsedTime = clock.getElapsedTime()
@@ -87,12 +98,14 @@ for (let i = 0; i < boidParams.count; i++) {
   const particles = mesh()
   scene.add(particles.mesh) // Might not need to draw these at all by the end... possibly
 
-  const cam = { x: 0, y: 0, z: 400 }
+  const cam = { x: 0, y: 0, z: 3000 }
 
   const pane = new Pane()
   pane.addBinding(boidParams, 'count', { min: 1, max: 1000, step: 1 })
   pane.addBinding(boidParams, 'speed')
-  pane.addBinding(cam, 'z', { min: 10, max: 3000 }).on
+  pane.addBinding(cam, 'z', { min: 10, max: 3000 }).on('change', (ev) => {
+    camera.position.z = ev.value
+  })
   const sep = pane.addFolder({
     title: 'Separation',
   })
@@ -143,15 +156,15 @@ for (let i = 0; i < boidParams.count; i++) {
 
   const clock = new T.Clock()
   const stats = Stats()
-//   0: fps, 1: ms, 2: mb, 3+: custom
-  stats.showPanel( 0 );
-  stats.showPanel( 1 );
-//   stats.showPanel( 2 );
-  document.body.appendChild( stats.dom );
-// stats.update()
+  //   0: fps, 1: ms, 2: mb, 3+: custom
+  stats.showPanel(0)
+  stats.showPanel(1)
+  //   stats.showPanel( 2 );
+  document.body.appendChild(stats.dom)
+  // stats.update()
   const anime = () => {
-      stats.begin()
-      particles.update()
+    stats.begin()
+    particles.update()
     // const elapsedTime = clock.getElapsedTime()
     stats.end()
     // camera.rotation.y = 0.5 * elapsedTime
@@ -161,23 +174,21 @@ for (let i = 0; i < boidParams.count; i++) {
     renderer.render(scene, camera)
   }
 
-//   anime()
+  //   anime()
 
-
-const frameLengthMS = 1000/70;//60 fps
-let previousTime = 0;
-// The previous answers seem to ignore the intended design of requestAnimationFrame, and make some extraneous calls as a result. requestAnimationFrame takes a callback, which in turn takes a high precision timestamp as its argument. So you know the current time and you don't need to call Date.now(), or any other variant, since you already have the time. All that’s needed is basic arithmetic:
-function animate(timestamp=0){
-    if(timestamp - previousTime > frameLengthMS){
-    //   console.log(previousTime)
-   stats.begin()
-   particles.update()
-   // const elapsedTime = clock.getElapsedTime()
-   stats.end()  
-    previousTime = timestamp;
+  const frameLengthMS = 1000 / 70 //60 fps
+  let previousTime = 0
+  // The previous answers seem to ignore the intended design of requestAnimationFrame, and make some extraneous calls as a result. requestAnimationFrame takes a callback, which in turn takes a high precision timestamp as its argument. So you know the current time and you don't need to call Date.now(), or any other variant, since you already have the time. All that’s needed is basic arithmetic:
+  function animate(timestamp = 0) {
+    if (timestamp - previousTime > frameLengthMS) {
+      //   console.log(previousTime)
+      stats.begin()
+      particles.update()
+      // const elapsedTime = clock.getElapsedTime()
+      stats.end()
+      previousTime = timestamp
+    }
+    window.requestAnimationFrame(animate)
+    renderer.render(scene, camera)
   }
-  window.requestAnimationFrame(animate)
-  renderer.render(scene, camera)
-
-}
-animate()
+  animate()
