@@ -12,6 +12,7 @@
     "@tweakpane/core": "^2.0.1",
     "@types/three": "0.147.0",
     "lil-gui": "^0.19.1",
+    "stats.js": "^0.17.0",
     "tweakpane": "^4.0.1",
     "vite": "^4.4.5"
   },
