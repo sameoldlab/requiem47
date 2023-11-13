@@ -1,60 +1,59 @@
 import * as T from 'three'
 const canvas = document.querySelector('canvas.webgl')
 import { Pane } from 'tweakpane'
-import { scene, vec3, type Boid } from './utils'
-import { boid, boidParams } from './boids' 
+import Stats from 'stats.js'
+import { scene, type Boid } from './utils'
+import { boid, boidParams, flock } from './boids'
 
-  const frame = {
-    width: window.innerWidth,
-    height: window.innerHeight,
-  }
-  const mouse = { x: 0, y: 0 }
+const frame = {
+  width: window.innerWidth,
+  height: window.innerHeight,
+}
+const mouse = { x: 0, y: 0 }
 
-  window.addEventListener('resize', () => {
-    // Update sizes
-    frame.width = window.innerWidth
-    frame.height = window.innerHeight
+window.addEventListener('resize', () => {
+  // Update sizes
+  frame.width = window.innerWidth
+  frame.height = window.innerHeight
 
-    // Update camera
-    camera.aspect = frame.width / frame.height
-    camera.updateProjectionMatrix()
+  // Update camera
+  camera.aspect = frame.width / frame.height
+  camera.updateProjectionMatrix()
 
-    // Update renderer
-    renderer.setSize(frame.width, frame.height)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-  })
-
-  document.addEventListener('mousemove', (e) => {
-    mouse.x = e.clientX
-    mouse.y = e.clientY
-  })
-
-  const renderer = new T.WebGLRenderer({ canvas })
+  // Update renderer
   renderer.setSize(frame.width, frame.height)
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+})
 
-  //////////////////////////////////////////////////////////////
-  //   FLOCKING
-  //////////////////////////////////////////////////////////////
+document.addEventListener('mousemove', (e) => {
+  mouse.x = e.clientX
+  mouse.y = e.clientY
+})
 
-  const flock = [] as Boid[]
-  for (let i = 0; i < boidParams.count; i++) {
-    flock.push(
-      boid({
-        position: new vec3().random().subScalar(0.5).multiplyScalar(200),
-        velocity: new vec3().random().subScalar(0.5).multiplyScalar(99),
-        acceleration: new vec3(),
-      })
-    ) // Do not "optimize"
-  }
+const renderer = new T.WebGLRenderer({ canvas })
+renderer.setSize(frame.width, frame.height)
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+//////////////////////////////////////////////////////////////
+//   FLOCKING
+//////////////////////////////////////////////////////////////
+
+const boids = [] as Boid[]
+for (let i = 0; i < boidParams.count; i++) {
+  boids[i] = boid()
+}
 
   function mesh() {
     const geometry = new T.BufferGeometry()
-    const material = new T.PointsMaterial({ size: boidParams.particleSize })
+    const material = new T.PointsMaterial({
+      size: boidParams.particleSize,
+      fog: true,
+      sizeAttenuation: true,
+    })
 
     // Runs once when added to scene
     const posArray = new Float32Array(boidParams.count * 3)
-    flock.forEach((b, i) => {
+    boids.forEach((b, i) => {
       ;[posArray[i * 3], posArray[i * 3 + 1], posArray[i * 3 + 2]] =
         b.position.toArray()
     })
@@ -65,9 +64,9 @@ import { boid, boidParams } from './boids'
       update: () => {
         const posArray = new Float32Array(boidParams.count * 3)
 
-        flock.forEach((b) => b.flock(flock))
-        flock.forEach((b, i) => {
-          b.update()
+        boids.forEach((b, i) => {
+          flock(b, boids)
+        // });         boids.forEach((b, i) => {
           ;[posArray[i * 3], posArray[i * 3 + 1], posArray[i * 3 + 2]] =
             b.position.toArray()
         })
@@ -98,46 +97,34 @@ import { boid, boidParams } from './boids'
     title: 'Separation',
   })
   sep.addBinding(boidParams.separate, 'threshold', {
-    title: 'dfs',
     min: 0,
     max: 100,
-    step: 1,
   })
   sep.addBinding(boidParams.separate, 'strength', {
-    title: 'dfs',
     min: 0,
     max: 10,
-    step: 1,
   })
   const align = pane.addFolder({
     title: 'Alignment',
   })
   align.addBinding(boidParams.align, 'radius', {
-    title: 'dfs',
     min: 0,
     max: 100,
-    step: 1,
   })
   align.addBinding(boidParams.align, 'strength', {
-    title: 'dfs',
     min: 0,
     max: 10,
-    step: 1,
   })
   const cohere = pane.addFolder({
     title: 'Cohesion',
   })
   cohere.addBinding(boidParams.cohere, 'radius', {
-    title: 'dfs',
     min: 0,
     max: 100,
-    step: 1,
   })
   cohere.addBinding(boidParams.cohere, 'strength', {
-    title: 'dfs',
     min: 0,
     max: 10,
-    step: 1,
   })
 
   // Camera
@@ -155,10 +142,18 @@ import { boid, boidParams } from './boids'
   ///////////////////////////////////////////////////////////////////////////////
 
   const clock = new T.Clock()
-  const animate = () => {
-    particles.update()
+  const stats = Stats()
+//   0: fps, 1: ms, 2: mb, 3+: custom
+  stats.showPanel( 0 );
+  stats.showPanel( 1 );
+//   stats.showPanel( 2 );
+  document.body.appendChild( stats.dom );
+// stats.update()
+  const anime = () => {
+      stats.begin()
+      particles.update()
     // const elapsedTime = clock.getElapsedTime()
-
+    stats.end()
     // camera.rotation.y = 0.5 * elapsedTime
 
     // Render
@@ -166,4 +161,23 @@ import { boid, boidParams } from './boids'
     renderer.render(scene, camera)
   }
 
-  animate()
+//   anime()
+
+
+const frameLengthMS = 1000/70;//60 fps
+let previousTime = 0;
+// The previous answers seem to ignore the intended design of requestAnimationFrame, and make some extraneous calls as a result. requestAnimationFrame takes a callback, which in turn takes a high precision timestamp as its argument. So you know the current time and you don't need to call Date.now(), or any other variant, since you already have the time. All that’s needed is basic arithmetic:
+function animate(timestamp=0){
+    if(timestamp - previousTime > frameLengthMS){
+    //   console.log(previousTime)
+   stats.begin()
+   particles.update()
+   // const elapsedTime = clock.getElapsedTime()
+   stats.end()  
+    previousTime = timestamp;
+  }
+  window.requestAnimationFrame(animate)
+  renderer.render(scene, camera)
+
+}
+animate()
