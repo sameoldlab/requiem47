@@ -214,7 +214,7 @@ function animate(timestamp = 0) {
   window.requestAnimationFrame(animate)
   renderer.render(scene, camera)
 }
-  animate()
+  // animate()
 
 window.addEventListener('resize', () => {
   // Update sizes
