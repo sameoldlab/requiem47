@@ -4,23 +4,23 @@ import { Boid, vec3 } from './utils'
 
 boidParams.particleSize
 boidParams.BOUNDS
-// Double the diameter of the largest object radius
+// x4 the diameter of the largest object radius
 const cellSize =
   Math.max(
     boidParams.separate.threshold,
     boidParams.align.radius,
     boidParams.cohere.radius
   ) * 4
-const conv = 1 / cellSize
+const conversion = 1 / cellSize
 
 // const hashTable = new Map()
 
 const getHash = (position) => {
   const { x, y, z } = position
   const hash =
-    (Math.floor(x / cellSize) + Math.floor(y / cellSize)) *
+    (Math.floor(x *conversion) + Math.floor(y *conversion)) *
       boidParams.BOUNDS.y +
-    Math.floor(z / cellSize) * boidParams.BOUNDS.z
+    Math.floor(z *conversion) * boidParams.BOUNDS.z
   return hash
 }
 
