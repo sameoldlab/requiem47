@@ -277,7 +277,7 @@ const result = renderer.compute({
   instances: 1,
   inputs: {
     source: {
-      data: new Float32Array([1, 1, 1, 1, 1, 1]),
+      data: new Float32Array([0, 0, 0, 0, 0, 0]),
       size: 1,
     //   needsUpdate: false
     },
@@ -293,4 +293,4 @@ const result = renderer.compute({
 })
 
 // { result: Float32Array(5) [0, 2, 4, 6, 8] }
-console.log(result)
+console.table(result)

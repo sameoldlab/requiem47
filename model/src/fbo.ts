@@ -93,7 +93,8 @@ gl.vertexAttribPointer(
 // gl.drawArrays(gl.POINTS, 0, 3)
 
 gl.uniform1f(uSize, 50.0)
-gl.drawArrays(gl.POINTS, 0, 2)
+// gl.vertexAttrib1f(location,value)
+// gl.drawArrays(gl.POINTS, 0, 2)
 
 gl.drawArrays(gl.TRIANGLES, 0, 3)
 
@@ -107,6 +108,7 @@ if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
     console.log(gl.getShaderInfoLog(vertexShader))
     console.log(gl.getShaderInfoLog(fragmentShader))
  }
+ console.log(gl.getParameter(gl.MAX_UNIFORM_BLOCK_SIZE))
 
 // gl.transformFeedbackVaryings(program, ['position', 'color'],gl.INTERLEAVED_ATTRIBS)
 // gl.linkProgram(program)

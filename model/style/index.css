@@ -5,7 +5,15 @@
 * { margin: 0; padding: 0;}
 
 body {
+  width: 100%;
   display: flex;
   place-items: center;
+  
+}
+
+#model {
+    width: 100%;
+    background: #111;
+    /* border: 1px solid red; */
 }
 
