@@ -2,7 +2,8 @@
 	import {Canvas, Layer, type Render} from 'svelte-canvas'
 	let canvas: HTMLCanvasElement 
 	let render: Render
-	const PPI = 20
+	const z = 30 //feed this into "camera" 
+	const PPI = 40
  	const map = (x, b, d) => x/b * d;
 	   	
 	$: render =({context: ctx, width, height}) => {
@@ -18,16 +19,16 @@
 			for(let y =0; y<PPI; y++) {
 							
 				ctx.fillStyle = `oklch(
-					37,
-					.5,
-					${(Math.random()*220)+120} 
+					9.1,
+					.38,
+					${(Math.random()*80)+12} 
 				)`;
 				//Convert hue to an array of preset values
 				ctx.fillRect(
-					map(x, PPI, width),
-					map(y, PPI, height), 
-					width/PPI, 
-					height/PPI,
+					map(x, PPI, width*(Math.random())),
+					map(y, PPI, height*(Math.random())),
+					width/PPI*(Math.random()*16)+1, 
+					height/PPI*(Math.random()*16)+1,
 				)
 			
 		}}
