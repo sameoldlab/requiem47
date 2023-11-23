@@ -18,7 +18,7 @@ const canvas = document.getElementById(
 // Verify canvas exists
 let context, renderer
 if (canvas) {
-  context = canvas.getContext('webgl2')
+  context = canvas.getContext('webgl')
   renderer = new T.WebGLRenderer({
     canvas,
     context,
@@ -28,7 +28,7 @@ if (canvas) {
 
 renderer.setSize(frame.width, frame.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-renderer.autoClearColor = false
+renderer.autoClearColor = true
 
 const scene = new T.Scene()
 //////////////////////////////////////////////////////////////

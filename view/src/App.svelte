@@ -1,44 +1,65 @@
 <script lang="ts">
 	import {Canvas, Layer, type Render} from 'svelte-canvas'
+	import boid from './boid'
+
 	let canvas: HTMLCanvasElement 
 	let render: Render
+	let setup: Render
 	const z = 30 //feed this into "camera" 
-	const PPI = 40
+	const PPI = 20
  	const map = (x, b, d) => x/b * d;
 	   	
-	$: render =({context: ctx, width, height}) => {
-		console.log(height, width)
+	$: setup =({context: ctx, width, height}) => {
 		
-		ctx.font = `${width / 10}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'tomato';
-    ctx.fillText('hello world', width / 2, height / 2);
-	
 		for(let x =0; x<PPI; x++) {
 			for(let y =0; y<PPI; y++) {
 							
+
 				ctx.fillStyle = `oklch(
-					9.1,
-					.38,
-					${(Math.random()*80)+12} 
+					100%,
+					.12,
+					${(Math.random()*90)+220}
 				)`;
-				//Convert hue to an array of preset values
+
+				ctx.font = `8px sans-serif`;
+				ctx.fillText(`${x}, ${y}`,
+				map(x, PPI, width),
+				map(y, PPI, height),
+				);
+				
+				
 				ctx.fillRect(
-					map(x, PPI, width*(Math.random())),
-					map(y, PPI, height*(Math.random())),
-					width/PPI*(Math.random()*16)+1, 
-					height/PPI*(Math.random()*16)+1,
-				)
-			
+					map(x, PPI, width),
+					map(y, PPI, height),
+					width/PPI, 
+					height/PPI,
+				) 
+				
 		}}
-	}		
+	}	
+	
+	$: render =({context: ctx, width, height}) => {
+
+		ctx.fillStyle = `oklch(
+					100%,
+					.12,
+					${(Math.random()*90)+220}
+				)`;
+
+		ctx.fillRect(
+						map($boid.x%PPI, PPI, width),
+						map($boid.y%PPI, PPI, height),
+						width/PPI*(Math.random()*1)+1, 
+						height/PPI*(Math.random()*1)+1,
+						) 
+	}	
 </script>
 	<div class="view">
-		<Canvas bind:this={canvas}>
-			<Layer {render}/>
+		<!-- {boid.position} -->
+		<Canvas bind:this={canvas} autoclear={false}>
+			<Layer {setup} />
 		</Canvas>
-		<div class="view-controls">.</div>
+		<div class="view-controls"></div>
 	</div>
 
 <style>

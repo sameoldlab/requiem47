@@ -1,34 +1,26 @@
-// [Andrew Adamnson](https://www.youtube.com/@osakaandrew) is the goat
 const vert = /* glsl */ `#version 300 es
-uniform float uPointSize;
-in vec2 aPosition;
-layout(location=4) in vec3 aColor;
-out vec3 vColor;
+in float inVelocity;
+in float inPosition;
 
-void main() {
-  vColor = aColor; 
-  gl_PointSize = uPointSize;
-  gl_Position = vec4(aPosition, 0.0, 1.);
+out float outVelocity;
+out float outPosition;
+
+void main()
+{
+    outVelocity = inVelocity + 2.;
+    outPosition = inPosition - 4.;
 }`
 
-const frag = /*glsl*/ `#version 300 es
-precision mediump float;
-in vec3 vColor;
-out vec4 fragColor;
-void main() {
-  fragColor = vec4(vColor,1);
-}`
+const frag = /*glsl*/ `#version 300 es 
+void main() {}`
 
-const canvas = document.getElementById(
-  'model'
-) as HTMLCanvasElement
+const canvas = document.getElementById('model') as HTMLCanvasElement
 const gl = canvas.getContext('webgl2')
+if (!gl) throw Error('WebGL 2 not available')
+// Create GL Program and attach the vertex shader
+const program = gl.createProgram()
+if (!program) throw Error('program not valid?')
 
-if (!gl) {
-  throw Error('WebGL 2 not available')
-}
-
-const program = gl.createProgram()!
 
 const vertexShader = gl.createShader(gl.VERTEX_SHADER)!
 gl.shaderSource(vertexShader, vert)
@@ -40,84 +32,71 @@ gl.shaderSource(fragmentShader, frag)
 gl.compileShader(fragmentShader)
 gl.attachShader(program, fragmentShader)
 
-//Use gl.bindAttribLocation before linking shaders
-// gl.bindAttribLocation(program, 6, 'aColor')
-// Program that depends on future hardware procgress might ve interesting, no I will not check for prior work.
-
+// Attach transform feedback
+gl.transformFeedbackVaryings(program, ['outVelocity', 'outPosition'],gl.INTERLEAVED_ATTRIBS)
 gl.linkProgram(program)
-gl.useProgram(program)
-
-
-// Get a uniform from the vertex then change it's values. AFTER calling useProgram
-// ask GPU for attrib location: gl.getAttribLocation(program,'aDemo')
-const uSize = gl.getUniformLocation(program, 'uPointSize')
-const aPosition = gl.getAttribLocation(program, 'aPosition')
-const aColor = gl.getAttribLocation(program, 'aColor')
-
-gl.enableVertexAttribArray(aPosition)
-gl.enableVertexAttribArray(aColor)
-
-const bufferData = new Float32Array([
-     .7, -.1,  0,   1,  1,
-     .3, -.9,  1,   1,  0,
-     -.3, .9,  1,   0,  1,
-])
-
-const buffer = gl.createBuffer()
-gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-gl.bufferData(gl.ARRAY_BUFFER, bufferData, gl.STATIC_DRAW)
-
-gl.vertexAttribPointer(
-  aPosition,
-  2,
-  gl.FLOAT,
-  false,
-  /* 5 floats with four bytes each */ 
-  5 * 4,
-  0
-);
-
-gl.vertexAttribPointer(
-    aColor,
-    3,
-    gl.FLOAT,
-    false,
-    /* 5 floats with four bytes each */ 
-    5 * 4,
-    /* offset from array start off floats with four bytes each */ 
-    2 * 4
-  );
-
-// Set uniform value. Needs to be called once for each draw
-// gl.uniform1f(uSize, 40.0)
-// gl.drawArrays(gl.POINTS, 0, 3)
-
-gl.uniform1f(uSize, 50.0)
-// gl.vertexAttrib1f(location,value)
-// gl.drawArrays(gl.POINTS, 0, 2)
-
-gl.drawArrays(gl.TRIANGLES, 0, 3)
-
-console.table({
-  uSize: uSize,
-  aPosition: aPosition,
-  aColor: aColor,
-})
 
 if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
     console.log(gl.getShaderInfoLog(vertexShader))
-    console.log(gl.getShaderInfoLog(fragmentShader))
- }
- console.log(gl.getParameter(gl.MAX_UNIFORM_BLOCK_SIZE))
+}
+gl.useProgram(program)
 
-// gl.transformFeedbackVaryings(program, ['position', 'color'],gl.INTERLEAVED_ATTRIBS)
-// gl.linkProgram(program)
+// Bind Buffers
+const COUNT = 1_000_000
+const seed = new Float32Array(COUNT*2).map((_, index)=>index)
+console.log(seed)
 
-// const tfo = gl.createTransformFeedback()
-// gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK,tfo)
-// gl.deleteTransformFeedback(tfo)
 
-// const tfBuffer = gl.createBuffer()
-// gl.bindBuffer(gl.ARRAY_BUFFER, tfBuffer)
-// gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,0,tfBuffer)
+const buffer1 = gl.createBuffer()
+const vao1 = gl.createVertexArray()
+bindVaoBuffer(buffer1, vao1, gl)
+gl.bufferSubData(gl.ARRAY_BUFFER, 0, seed)
 
+const buffer2 = gl.createBuffer()
+const vao2 = gl.createVertexArray()
+bindVaoBuffer(buffer2, vao2, gl)
+
+
+gl.bindVertexArray(null)
+gl.bindBuffer(gl.ARRAY_BUFFER, null)
+
+// Ignore empty fragment shader
+gl.enable(gl.RASTERIZER_DISCARD)
+
+let vao = vao1
+let buffer = buffer2
+
+for (let i  = 0; i  < 10; i ++) {
+	gl.bindVertexArray(vao)
+	gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,0,buffer)
+	
+	gl.beginTransformFeedback(gl.POINTS)
+	gl.drawArrays(gl.POINTS,0,COUNT)
+	gl.endTransformFeedback()
+	gl.bindVertexArray(null)
+  gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,0,null)
+
+	vao = vao === vao1 ? vao2 : vao1
+	buffer = buffer === buffer2 ? buffer1 : buffer2	
+}
+// gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,0,null)
+gl.disable(gl.RASTERIZER_DISCARD)
+
+const view = new Float32Array(2*COUNT)
+gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, buffer1)
+gl.getBufferSubData(gl.TRANSFORM_FEEDBACK_BUFFER, 0, view)
+
+console.log(view)
+
+function bindVaoBuffer(buffer, vao, gl: WebGL2RenderingContext) {
+
+	gl.bindVertexArray(vao)
+	gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+
+	gl.vertexAttribPointer(0, 1, gl.FLOAT, false, 8, 0)
+	gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 8, 4)
+	gl.enableVertexAttribArray(0)
+	gl.enableVertexAttribArray(1)
+	gl.bufferData(gl.ARRAY_BUFFER, 2*COUNT*4, gl.DYNAMIC_READ)
+
+}
