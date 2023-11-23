@@ -5,16 +5,16 @@ import { type Boid, vec3 } from './utils'
 import { applyForce, boid, boidParams, flock } from './boids'
 import { findNearby, registerObject } from './spatialHash'
 
-const frame = {
-  width: window.innerWidth,
-  height: window.innerHeight,
-}
+
 const mouse = { x: 0, y: 0 }
 
 const canvas = document.getElementById(
   'model'
 ) as HTMLCanvasElement | null
-
+const frame = {
+  width: canvas?.width,
+  height: window.height,
+}
 // Verify canvas exists
 let context, renderer
 if (canvas) {
@@ -165,7 +165,7 @@ cohere.addBinding(boidParams.cohere, 'strength', {
 // Camera
 const camera = new T.PerspectiveCamera(
   50,
-  frame.width / frame.height,
+  1,
   0.01,
   8000
 )
@@ -214,9 +214,9 @@ function animate(timestamp = 0) {
   window.requestAnimationFrame(animate)
   renderer.render(scene, camera)
 }
-  // animate()
+  animate()
 
-window.addEventListener('resize', () => {
+/* window.addEventListener('resize', () => {
   // Update sizes
   frame.width = window.innerWidth
   frame.height = window.innerHeight
@@ -228,7 +228,8 @@ window.addEventListener('resize', () => {
   // Update renderer
   renderer.setSize(frame.width, frame.height)
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-})
+}) */
+
 document.addEventListener('mousemove', (e) => {
   mouse.x = e.clientX
   mouse.y = e.clientY

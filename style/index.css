@@ -2,18 +2,23 @@
   color: rgb(255, 255, 255,);
   background-color: #000;
 }
+
 * { margin: 0; padding: 0;}
 
 body {
   width: 100%;
+	height: 100vh;
   display: flex;
   place-items: center;
   
 }
 
 #model {
-    width: 100%;
-    background: #111;
-    /* border: 1px solid red; */
-}
+  /* width: 100%; */
+  background: #111;
+  /* border: 1px solid red; */
+	width: auto;
+	aspect-ratio: 1/1.618;
 
+	height: min(90%, 1000px);
+}
