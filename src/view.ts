@@ -60,7 +60,7 @@ const setup = ({ context:ctx, width, height }) => {
 				)`
 
 			ctx.font = `8px sans-serif`
-			ctx.fillText(`${vx}, ${vy}`, mapRange(x, {b1:PPI, b2: width}), mapRange(y, {b1:PPI, b2:height})+8)
+			// ctx.fillText(`${vx}, ${vy}`, mapRange(x, {b1:PPI, b2: width}), mapRange(y, {b1:PPI, b2:height})+8)
 			
 /* 			ctx.fillRect(
 				map(x, PPI, width),
@@ -78,22 +78,21 @@ setup({context, ...frame})
 
 const render = ({ context: ctx, width, height }) => {
 	ctx.fillStyle = '#111'
-	ctx.fillRect(0,0,width,height)
+	// ctx.fillRect(0,0,width,height)
 	ctx.restore()
 
 	boids.forEach((b, i)=>{
 		const {x: px, y:py, z: pz}  = b.position
 		const {x: vx, y:vy, z: vz}  = b.velocity
 
-		if(vx > vy) console.log('horizontal')
-		if(vx < vy) console.log('vertical')
-		ctx.fillStyle = `oklch(
-					50%,
-					.42,
-					${(pz%255) + 120}
-				)`
 
 		if(pz > z-50 && pz < z+50) {
+		ctx.fillStyle = `oklch(
+					50%
+					.42
+					${(pz%255) + 0}
+				/7%)`
+
 			// console.log(i, b.position)
 			if(vx > vy *1.5) {
 				ctx.fillRect(
@@ -118,7 +117,7 @@ const render = ({ context: ctx, width, height }) => {
 
 
 
-const frameLengthMS = 1000 / 60 //60 fps
+const frameLengthMS = 1000 / 24 //60 fps
 let previousTime = 0
 
 function animate(timestamp = 0) {
