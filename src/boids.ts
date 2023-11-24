@@ -2,10 +2,10 @@ import { Vector3 } from 'three'
 import {vec3, type Boid} from './utils'
 
 export const boidParams = {
-  count: 5000, 
+  count: 3000, 
   particleSize: 5,
-  BOUNDS: new vec3(400, 600, 1500),
-  speed: 4,
+  BOUNDS: new vec3(500, 700, 1500),
+  speed: 12,
 
   //Consider two level of separate scale; boid to bot  + group to group
   separate: {
@@ -97,7 +97,7 @@ function flock(boid, boids, acceleration: Vector3) {
     .add(align)
     .add(cohere)
     .multiplyScalar(0.25) // add Mass
-    // .multiply(weightAngle)
+    .multiply(weightAngle)
   // normalize acceleration. Seems ok without it (both or none) Forms spheres instead of cubes
   // .normalize()
   // .multiplyScalar(boidParams.speed)

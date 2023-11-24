@@ -21,4 +21,47 @@ body {
 	aspect-ratio: 1/1.618;
 
 	height: min(90%, 1000px);
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin: auto;
+	/* padding: .25em; */
+}
+
+#view {
+	width: 100%;
+	/* background: red; */
+	/* border: 1px solid red; */
+
+	/* width: auto; */
+	/* aspect-ratio: 1/1.618; */
+	height: 90%;
+	/* display: flex; */
+	justify-content: center;
+	align-items: center;
+	margin: auto;
+	/* padding: .25em; */
+	/* object-fit: contain; */
+}
+.view-bounds {
+	/* background: red; */
+	/* border: 1px solid red; */
+	font-family: 'Space Mono','Space Grotesk','Cabinet Grotesk', 'Fira Code', mono;
+	color: white;
+	/* width: auto; */
+	aspect-ratio: 1/1.618;
+	height: min(90%, 1000px);
+	display: grid;
+	justify-content: center;
+	align-items: center;
+	margin: auto;
+	/* padding: .25em; */
+	object-fit: contain;
+	postion: relative;
+}
+
+.z {
+	position: absolute;
+	bottom: 3em;
 }

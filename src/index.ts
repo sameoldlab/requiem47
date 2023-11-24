@@ -11,20 +11,19 @@ const mouse = { x: 0, y: 0 }
 const canvas = document.getElementById(
   'model'
 ) as HTMLCanvasElement | null
+if (!canvas) throw Error('webgl2 is not available on your browser')
+
 const frame = {
-  width: canvas?.width,
-  height: window.height,
+  width: canvas.width,
+  height: window.innerHeight,
 }
-// Verify canvas exists
-let context, renderer
-if (canvas) {
-  context = canvas.getContext('webgl')
-  renderer = new T.WebGLRenderer({
-    canvas,
-    context,
-    preserveDrawingBuffer: true,
-  })
-} else console.log('webgl2 is not available on your browser')
+
+const context = canvas.getContext('webgl')
+const renderer = new T.WebGLRenderer({
+  canvas,
+  context,
+  preserveDrawingBuffer: true,
+})
 
 renderer.setSize(frame.width, frame.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -35,7 +34,7 @@ const scene = new T.Scene()
 //   FLOCKING START
 //////////////////////////////////////////////////////////////
 
-const boids = [] as Boid[]
+export const boids = [] as Boid[]
 const grid = new Map()
 for (let i = 0; i < boidParams.count; i++) {
   boids[i] = boid()
@@ -104,10 +103,9 @@ function mesh() {
 }
 
 const particles = mesh()
-scene.add(particles.mesh) // Might not need to draw these at all by the end... possibly
+// scene.add(particles.mesh) // Might not need to draw these at all by the end... possibly
 
-const cam = { x: 0, y: 0, z: 1500 }
-const camr = { x: 0, y: 0, z: 1000 }
+const cam = { x: 0, y: 0, z: 1000 }
 
 //////////////////////////////////////////////////////////////
 //   FLOCKING END
@@ -171,13 +169,12 @@ const camera = new T.PerspectiveCamera(
 )
 camera.position.z = cam.z
 //   camera.rotation.y = 90
-scene.add(camera)
+// scene.add(camera)
 
 //////////////////////////////////////////////////////////////////////////////
 //   ANIMATE
 ///////////////////////////////////////////////////////////////////////////////
 
-const clock = new T.Clock()
 const stats = Stats()
 //   0: fps, 1: ms, 2: mb, 3+: custom
 stats.showPanel(0)
@@ -186,21 +183,11 @@ stats.showPanel(1)
 document.body.appendChild(stats.dom)
 // stats.update()
 
-const anime = () => {
-  stats.begin()
-  particles.update()
-  stats.end()
 
-  // Render
-  window.requestAnimationFrame(animate)
-  renderer.render(scene, camera)
-}
 
-// anime()
-
-const frameLengthMS = 1000 / 70 //60 fps
+const frameLengthMS = 1000 / 30 //60 fps
 let previousTime = 0
-// The previous answers seem to ignore the intended design of requestAnimationFrame, and make some extraneous calls as a result. requestAnimationFrame takes a callback, which in turn takes a high precision timestamp as its argument. So you know the current time and you don't need to call Date.now(), or any other variant, since you already have the time. All that’s needed is basic arithmetic:
+
 function animate(timestamp = 0) {
   if (timestamp - previousTime > frameLengthMS) {
     //   console.log(previousTime)
