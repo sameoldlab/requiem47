@@ -77,8 +77,13 @@ setup({context, ...frame})
 
 
 const render = ({ context: ctx, width, height }) => {
-	ctx.fillStyle = '#111'
-	// ctx.fillRect(0,0,width,height)
+	ctx.fillStyle = '#11111109'
+	ctx.fillStyle = `oklch(
+		20%
+		.42
+		${(z%360) }
+	/.02)`
+	ctx.fillRect(0,0,width,height)
 	ctx.restore()
 
 	boids.forEach((b, i)=>{
@@ -90,8 +95,8 @@ const render = ({ context: ctx, width, height }) => {
 		ctx.fillStyle = `oklch(
 					50%
 					.42
-					${(pz%255) + 0}
-				/7%)`
+					${(pz%360) + 81}
+				/.42)`
 
 			// console.log(i, b.position)
 			if(vx > vy *1.5) {
