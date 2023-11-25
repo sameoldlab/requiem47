@@ -2,7 +2,7 @@ import { Vector3 } from 'three'
 import {vec3, type Boid} from './utils'
 
 export const boidParams = {
-  count: 3000, 
+  count: 6500, 
   particleSize: 5,
   BOUNDS: new vec3(500, 700, 1500),
   speed: 12,
@@ -17,8 +17,8 @@ export const boidParams = {
     strength: 24,
   },
   cohere: {
-    radius: 46,
-    strength: 3,
+    radius: 16,
+    strength: 33.03,
   },
 }
 
@@ -96,7 +96,7 @@ function flock(boid, boids, acceleration: Vector3) {
     .add(separate)
     .add(align)
     .add(cohere)
-    .multiplyScalar(0.25) // add Mass
+    .multiplyScalar(0.05) // add Mass
     .multiply(weightAngle)
   // normalize acceleration. Seems ok without it (both or none) Forms spheres instead of cubes
   // .normalize()
@@ -110,9 +110,9 @@ function bounding(position) {
   const { x, y, z } = position
   const { abs, sign } = Math
   const { BOUNDS } = boidParams
-  if (abs(x) > BOUNDS.x) vect.setX(sign(x) * -(abs(x)-BOUNDS.x))
-  if (abs(y) > BOUNDS.y) vect.setY(sign(y) * -(abs(y)-BOUNDS.y))
-  if (abs(z) > BOUNDS.z) vect.setZ(sign(z) * -(abs(z)-BOUNDS.z))
+  if (abs(x) > BOUNDS.x) vect.setX(sign(x) * -25)
+  if (abs(y) > BOUNDS.y) vect.setY(sign(y) * -25)
+  if (abs(z) > BOUNDS.z) vect.setZ(sign(z) * -25)
   return vect
 }
 

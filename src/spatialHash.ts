@@ -10,7 +10,7 @@ const cellSize =
     boidParams.separate.threshold,
     boidParams.align.radius,
     boidParams.cohere.radius
-  ) * 10
+  ) * 5
 const conversion = 1 / cellSize
 
 // const hashTable = new Map()
