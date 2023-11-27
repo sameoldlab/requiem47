@@ -15,7 +15,7 @@ const conversion = 1 / cellSize
 
 // const hashTable = new Map()
 
-const getHash = (position) => {
+const getHash = (position, conversion) => {
   const { x, y, z } = position
   const hash =
     (Math.floor(x *conversion) + Math.floor(y *conversion)) *
@@ -26,9 +26,10 @@ const getHash = (position) => {
 
 export const registerObject = (
   object: Boid,
-  table: Map<number, Set<Boid> >
+  table: Map<number, Set<Boid> >,
+	conversion = 1 / cellSize
 ) => {
-  const hash = getHash(object.position)
+  const hash = getHash(object.position, conversion)
   const key = table.get(hash)
   if (!key) {
     const values = new Set([object])
@@ -40,8 +41,9 @@ export const registerObject = (
 
 export const findNearby = (
   position: Vector3,
-  table: Map<number, Set<Boid> >
-): Set<Boid> | undefined => table.get(getHash(position))
+  table: Map<number, Set<Boid> >,
+	conversion = 1 / cellSize
+): Set<Boid> | undefined => table.get(getHash(position, conversion))
 
 function updateObject() {
   //Given an objects identifier

@@ -14,7 +14,7 @@ const canvas = document.getElementById(
 if (!canvas) throw Error('webgl2 is not available on your browser')
 
 const frame = {
-  width: canvas.width,
+  width: 0,//canvas.width,
   height: window.innerHeight,
 }
 
@@ -35,7 +35,7 @@ const scene = new T.Scene()
 //////////////////////////////////////////////////////////////
 
 export const boids = [] as Boid[]
-const grid = new Map()
+export const grid = new Map()
 for (let i = 0; i < boidParams.count; i++) {
   boids[i] = boid()
   registerObject(boids[i], grid)
@@ -103,7 +103,7 @@ function mesh() {
 }
 
 const particles = mesh()
-// scene.add(particles.mesh) // Might not need to draw these at all by the end... possibly
+scene.add(particles.mesh) // Might not need to draw these at all by the end... possibly
 
 const cam = { x: 0, y: 0, z: 1000 }
 
@@ -165,11 +165,11 @@ const camera = new T.PerspectiveCamera(
   50,
   1,
   0.01,
-  8000
+  2000
 )
 camera.position.z = cam.z
 //   camera.rotation.y = 90
-// scene.add(camera)
+scene.add(camera)
 
 //////////////////////////////////////////////////////////////////////////////
 //   ANIMATE
@@ -221,3 +221,15 @@ document.addEventListener('mousemove', (e) => {
   mouse.x = e.clientX
   mouse.y = e.clientY
 })
+
+// Wall Text:
+console.info("source: https://github.com/sameoldlab/requiem47");
+console.info("https://are.na/requiem-47/requiem-47");
+console.info(`
+A.) A map may have a structure similar or dissimilar to the structure of the territory.
+
+B.) Two similar structures have similar ‘logical’ characteristics. Thus, if in a correct map, Dresden is given as between Paris and Warsaw, a similar relation is found in the actual territory.
+
+C.) A map is not the actual territory.
+
+D.) An ideal map would contain the map of the map, the map of the map of the map, etc., endlessly…We may call this characteristic self-reflexiveness.`)

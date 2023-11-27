@@ -14,18 +14,18 @@ body {
 }
 
 #model {
-  /* width: 100%; */
+  width: 2vw;
   background: #111;
   /* border: 1px solid red; */
-	width: auto;
-	aspect-ratio: 1/1.618;
+	/* width: auto; */
+	/* aspect-ratio: 1/1.618; */
 
 	height: min(90%, 1000px);
 
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	margin: auto;
+	/* margin: auto; */
 	/* padding: .25em; */
 }
 
