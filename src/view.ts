@@ -1,4 +1,4 @@
-import { boidParams } from './boids'
+import { boidParams, boid } from './boids'
 import {boids} from './index'
 import { findNearby, registerObject } from './spatialHash'
 import { vec3 } from './utils'
@@ -12,7 +12,6 @@ import { vec3 } from './utils'
 <div class="view-controls"></div>
 </div>
  */
-let boid = boids[5].position
 const canvas = document.getElementById('view') as HTMLCanvasElement
 if (!canvas) throw Error('webgl2 is not available on your browser')
 
@@ -32,13 +31,15 @@ const frame = {
 	width: canvas.width,
 	height: canvas.height,
 }
-const mouse = { x: 0, y: 0 }
+const mouse = { x: -1, y: -1, clicked: false}
 
 
 
-const z = 1000 //feed this into "camera"
+const z = Math.round(Math.random()*boidParams.BOUNDS.z*2)//1000 //feed this into "camera"
 const PPI = 20
-
+let label = document.querySelector('.z')!
+console.log(label)
+label.insertAdjacentText('beforeend', ` ${z}`)
 /**
  * Map number to a new range
  * @param x Number to be mapped
@@ -102,8 +103,8 @@ const render = ({ context: ctx, width, height }) => {
 	ctx.fillStyle = `oklch(
 		20%
 		.42
-		${360 / z}
-	/.02)`
+		${ z}
+	/.2)`
 	// ctx.fillStyle = '#111'
 	// ctx.fillStyle = `${pallette[3]}07`
 
@@ -118,7 +119,7 @@ const render = ({ context: ctx, width, height }) => {
 			ctx.fillStyle = `oklch(
 				50%
 				.42
-				${pz}
+				${pz+(Math.PI*2)}
 				/.62)`
 
 
@@ -142,7 +143,7 @@ const render = ({ context: ctx, width, height }) => {
 					(height / PPI) * (Math.random() * vy) + 1
 				)
 			}
-			console.log(px)
+			// console.log(px)
 			
 		}
 	})
@@ -164,14 +165,21 @@ const lines = ({ context: ctx, width, height }) => {
 	ctx.fillStyle = `oklch(
 		50%
 		.42
-		${z % 360}
-		/.02)`
+		${z}
+		/.016)`
 		// ctx.fillStyle = '#111'
 	ctx.fillRect(0, 0, width, height)
 	// boids.forEach((b, i) => {
 		// const { x: px, y: py, z: pz } = b.position
 		// const { x: vx, y: vy, z: vz } = b.velocity
-
+		if (mouse.x >= 0) {
+			ctx.save()
+			ctx.fillStyle = mouse.clicked ? `oklch(20% .42 ${z+90})`: '#eeeeee01';
+			ctx.beginPath();
+			ctx.arc(mouse.x, mouse.y, 5, 0, Math.PI * 2, true); // Outer circle
+			ctx.fill()
+			ctx.restore()
+		}
 	// if (pz > z - 50 && pz < z + 50) {
 	let nearby = 0
 	for (let i = 0; i < boidParams.count; i++) {
@@ -203,7 +211,7 @@ const lines = ({ context: ctx, width, height }) => {
 			//get the general direction of velocity within the set
 			ctx.strokeStyle = `oklch(
 				80%
-				.12
+				.06
 				${(Math.atan2(v.y, v.x)* (180 / Math.PI))/2}
 				/1)`
 			let i = 0
@@ -243,13 +251,13 @@ let previousTime60 = 0
 
 function animate(timestamp = 0) {
 
-		if (timestamp - previousTime24 > frameLengthMS/24) {
+		if (timestamp - previousTime24 > frameLengthMS/8) {
 		//   console.log(previousTime)
 		render({context, ...frame})
   
 		previousTime24 = timestamp
   }
-	if (timestamp - previousTime60 > frameLengthMS/60) {
+	if (timestamp - previousTime60 > frameLengthMS/30) {
 		
 		lines({context, ...frame})
 		previousTime60 = timestamp
@@ -258,3 +266,35 @@ function animate(timestamp = 0) {
   window.requestAnimationFrame(animate)
 }
 animate()
+let i = 0
+canvas.addEventListener('mousemove', (e) => {
+	var rect = canvas.getBoundingClientRect();
+
+  mouse.x = e.clientX - rect.left
+  mouse.y = e.clientY - rect.top
+	if(mouse.clicked && i <6000) {
+		i++
+		boidParams.count++
+		boids.push(boid(new vec3(mapRange(mouse.x, {b1: rect.width, a2: -boidParams.BOUNDS.x, b2: boidParams.BOUNDS.x}),
+														 mapRange(mouse.y, {b1: rect.width, a2: -boidParams.BOUNDS.y, b2: boidParams.BOUNDS.y}),
+														z 
+					)))
+	}
+	// e.x
+	// console.log(	e.buttons		)
+
+})
+canvas.addEventListener('mouseleave', (e) => {
+  mouse.x = -1 
+  mouse.y = -1 
+	console.log(	i		)
+
+})
+
+canvas.addEventListener('mousedown', (e) => {
+  mouse.clicked = true
+})
+
+canvas.addEventListener('mouseup', (e) => {
+  mouse.clicked = false
+})

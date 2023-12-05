@@ -19,17 +19,17 @@ const frame = {
 }
 
 const context = canvas.getContext('webgl')
-const renderer = new T.WebGLRenderer({
-  canvas,
-  context,
-  preserveDrawingBuffer: true,
-})
+// const renderer = new T.WebGLRenderer({
+//   canvas,
+//   context,
+//   preserveDrawingBuffer: true,
+// })
 
-renderer.setSize(frame.width, frame.height)
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-renderer.autoClearColor = true
+// renderer.setSize(frame.width, frame.height)
+// renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+// renderer.autoClearColor = true
 
-const scene = new T.Scene()
+// const scene = new T.Scene()
 //////////////////////////////////////////////////////////////
 //   FLOCKING START
 //////////////////////////////////////////////////////////////
@@ -65,16 +65,18 @@ function mesh() {
   )
   // Pre-allocatting memory for acceleration
     const acceleration = new vec3()
-		let len = boids.length
+		let len = boidParams.count
 		let i =0
 
   return {
     mesh: new T.Points(geometry, material),
     update: () => {
-      const posArray = new Float32Array(boidParams.count * 3)
+      // const posArray = new Float32Array(boidParams.count * 3)
 
       // Loops through all boids in the scene
-			while(i < len){
+			console.log(boidParams.count);
+			
+			while(i < boids.length){
         registerObject(boids[i], grid)
         const fleet = findNearby(boids[i].position, grid)
         if (!fleet) return
@@ -84,26 +86,26 @@ function mesh() {
 
 				applyForce(boids[i], acceleration)
 			  acceleration.set(0,0,0)
-				;[
+/* 				;[
           posArray[i * 3],
           posArray[i * 3 + 1],
           posArray[i * 3 + 2],
-        ] = boids[i].position.toArray()
+        ] = boids[i].position.toArray() */
 				i++
 			}
       grid.clear()
 			i = 0
 
-      geometry.setAttribute(
-        'position',
-        new T.BufferAttribute(posArray, 3)
-      )
+      // geometry.setAttribute(
+      //   'position',
+      //   new T.BufferAttribute(posArray, 3)
+      // )
     },
   }
 }
 
 const particles = mesh()
-scene.add(particles.mesh) // Might not need to draw these at all by the end... possibly
+// scene.add(particles.mesh) // Might not need to draw these at all by the end... possibly
 
 const cam = { x: 0, y: 0, z: 1000 }
 
@@ -169,7 +171,7 @@ const camera = new T.PerspectiveCamera(
 )
 camera.position.z = cam.z
 //   camera.rotation.y = 90
-scene.add(camera)
+// scene.add(camera)
 
 //////////////////////////////////////////////////////////////////////////////
 //   ANIMATE
@@ -199,7 +201,7 @@ function animate(timestamp = 0) {
   }
 
   window.requestAnimationFrame(animate)
-  renderer.render(scene, camera)
+  // renderer.render(scene, camera)
 }
   animate()
 

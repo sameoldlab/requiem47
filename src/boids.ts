@@ -2,7 +2,7 @@ import { Vector3 } from 'three'
 import {vec3, type Boid} from './utils'
 
 export const boidParams = {
-  count: 6500, 
+  count: 10, 
   particleSize: 5,
   BOUNDS: new vec3(500, 700, 1500),
   speed: 12,
